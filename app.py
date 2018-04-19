@@ -55,15 +55,18 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 # add custom StreamHandler
 ch = logging.StreamHandler()
+# If LOG_FILE is set, write to file directly.
+if "LOG_FILE" in os.environ:
+    ch = logging.FileHandler(os.getenv('LOG_FILE'))
 ch.setFormatter(RequestFormatter(
     # Check if any env LOG_FORMAT was set, otherwise create default format.
     fmt=os.getenv(
         'LOG_FORMAT',
-        'timestamp=%(asctime)s, remote_addr=%(request_remote_addr)s, user_agent=%(request_user_agent)s, component=%(component)s, status=%(status)s, data=%(message)s'),
+        'timestamp=%(asctime)s, remote_addr=%(request.remote_addr)s, user_agent=%(request.user_agent)s, referer=%(request.referrer)s, component=%(component)s, status=%(status)s, data=%(message)s'),
     # Check for env REQUEST_ATTR to use for map requests attributes.
     request_attr=os.getenv(
         'REQUEST_ATTR',
-        'remote_addr, user_agent').replace(' ', '').split(',')
+        'remote_addr, user_agent, referrer').replace(' ', '').split(',')
 ))
 app.logger.addHandler(ch)
 app.logger.setLevel(logging.INFO)
