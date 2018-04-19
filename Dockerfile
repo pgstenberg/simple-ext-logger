@@ -8,4 +8,10 @@ EXPOSE 5000
 
 COPY app.py app.py
 
-ENTRYPOINT flask run --host=0.0.0.0
+ENV GUNICORN_WORKERS=5
+ENV GUNICORN_BIND=0.0.0.0:5000
+
+RUN echo "#!/bin/bash \n gunicorn --workers=${GUNICORN_WORKERS} --bind=${GUNICORN_BIND} app:app" > ./entrypoint.sh && \
+  chmod +x ./entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
