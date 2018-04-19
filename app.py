@@ -14,10 +14,28 @@ class RequestFormatter(logging.Formatter):
         self.request_attr = request_attr
         super(RequestFormatter, self).__init__(**kwds)
 
+    @staticmethod
+    def _getattr(obj, attr):
+
+        if obj is None:
+            return ''
+
+        if '.' not in attr:
+            if isinstance(obj, dict):
+                return obj.get(attr, '')
+            else:
+                return getattr(obj, attr, '')
+
+        s_attr = attr.split('.', 1)
+        return RequestFormatter._getattr(getattr(obj, s_attr[0], None), s_attr[1])
+
     def format(self, record):
         # Extract all desired request fields into the record.
         for a in self.request_attr:
-            setattr(record, 'request_{0}'.format(a), getattr(request, a))
+            setattr(
+                record,
+                'request.{0}'.format(a),
+                RequestFormatter._getattr(request, a))
 
         # Receive component and status from path
         path_params = request.path.split('/')
