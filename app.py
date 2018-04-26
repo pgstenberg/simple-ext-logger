@@ -37,6 +37,11 @@ class RequestFormatter(logging.Formatter):
                 'request.{0}'.format(a),
                 RequestFormatter._getattr(request, a))
 
+        # Get the "real" client IP by looking into x-forward
+        headers_list = request.headers.getlist("X-Forwarded-For")
+        setattr(record, 'client_ip', ' '
+                .join(headers_list) if headers_list else request.remote_addr)
+
         # Receive component and status from path
         path_params = request.path.split('/')
         if len(path_params) == 3:
@@ -62,7 +67,7 @@ ch.setFormatter(RequestFormatter(
     # Check if any env LOG_FORMAT was set, otherwise create default format.
     fmt=os.getenv(
         'LOG_FORMAT',
-        'timestamp=%(asctime)s, remote_addr=%(request.remote_addr)s, user_agent=%(request.user_agent)s, referer=%(request.referrer)s, component=%(component)s, status=%(status)s, data=%(message)s'),
+        'timestamp=%(asctime)s, remote_addr=%(client_ip)s, user_agent=%(request.user_agent)s, referer=%(request.referrer)s, component=%(component)s, status=%(status)s, data=%(message)s'),
     # Check for env REQUEST_ATTR to use for map requests attributes.
     request_attr=os.getenv(
         'REQUEST_ATTR',
